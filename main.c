@@ -14,9 +14,10 @@
 typedef struct Node
 {
 	int nodeVal;
-	int head;
+	
 	int amountNode;
 	struct Node *node[100];
+	struct Node *head;
 	
 }Node;
 /*
@@ -28,8 +29,9 @@ typedef struct ArrHold
 }ArrHold;
 */
 
-void searchNode(Node *, int, int **, int [], int);
+int searchNode(Node *, int, int **, int [], int, int [], int [], int);
 void insertAfter(Node *, int, int);
+int pathSearch(int [], int);
 
 
 
@@ -177,8 +179,6 @@ int main(int argc, char * argv[])
 					printf("This matrix is not symmetric\n");
 					return EXIT_FAILURE;
 				}
-
-
 			}
 
 			else if(j == i)
@@ -203,18 +203,24 @@ int main(int argc, char * argv[])
 
 	Node *root = malloc(sizeof(Node));
 	root->nodeVal = 0;
-	root->head = -1;
+	root->head = NULL;
 
+	int shortPath[vertNums];
 	int parNodes[vertNums];
+	int visable[vertNums];
 
 	for(i = 0; i < vertNums; i++)
 	{
 		parNodes[i] = -1;
+		shortPath[i] = -1;
+		visable[i] = -1;
 	}
 
 	int level = -1;
+	int path = -1;
 
-	searchNode(root, horzNums, matrix, parNodes, level);
+	path = searchNode(root, horzNums, matrix, parNodes, level, shortPath, visable, path);
+
 
 	
 
@@ -222,40 +228,69 @@ int main(int argc, char * argv[])
 	return EXIT_SUCCESS;
 }
 
-void searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level)
+int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level, int shortPath[], int visable[], int path)
 {
 	int i = 0;
 	int j = 0;
 	int nodeAmount = 0;
 
+	char check = 'n';
 	level++;
 
 	parNodes[level] = node->nodeVal;
+	visable[node->nodeVal] = node->nodeVal;
 
-	printf("%d\n", node->nodeVal);
-
+	printf("nodeVal:%d Level:%d\n", node->nodeVal, level);
+//	printf("Header Node\n");
+/*
+	for(i = 0; i < horzNums; i++)
+	{
+		printf("%d ", parNodes[i]);
+	}
+*/
+//	printf("\n");
 	//Creating Child Nodes
 	for(i = 0; i < horzNums; i++)
 	{
+		check = 'n';
+
+
 		for(j = 0; j < horzNums; j++)
 		{
 			if(i == parNodes[j])
 			{
-				break;
+				check = 'y';
 			}
-
-			else if(matrix[node->nodeVal][i] == 1)
+		}
+		
+		if(check != 'y')
+		{
+			if(matrix[node->nodeVal][i] == 1)
 			{
 				insertAfter(node, i, nodeAmount);
 				nodeAmount++;
+
+				if(i == visable[i])
+				{
+					path = pathSearch(shortPath, path);
+				}
 			}
 		}
 	}
 
 	for(i = 0; i < nodeAmount; i++)
 	{
-		searchNode(node->node[i], horzNums, matrix, parNodes, level);
+		path = searchNode(node->node[i], horzNums, matrix, parNodes, level, shortPath, visable, path);
+		parNodes[level + 1] = -1;
 	}
+	
+	return path;
+}
+
+int pathSearch(int shortPath[], int path)
+{
+
+	return path;
 }
 
 void insertAfter(Node* prev_node, int new_data, int nodeAmount) 
@@ -279,5 +314,6 @@ void insertAfter(Node* prev_node, int new_data, int nodeAmount)
 	/* 5. move the next of prev_node as new_node */
 	prev_node->node[nodeAmount] = new_node; 
 	prev_node->amountNode = nodeAmount + 1;
+	new_node->head = prev_node;
 }
 	
