@@ -31,7 +31,10 @@ typedef struct ArrHold
 
 int searchNode(Node *, int, int **, int [], int, int [], int [], int);
 void insertAfter(Node *, int, int);
-int pathSearch(int [], int, Node *);
+int goDownPath(Node *, int, int [], int, int);
+int goUpPath(int [], int, Node *, int, int);
+
+
 
 
 
@@ -216,6 +219,7 @@ int main(int argc, char * argv[])
 		visable[i] = -1;
 	}
 
+	visable[0] = 0;
 	int level = -1;
 	int path = -1;
 
@@ -232,6 +236,7 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 {
 	int i = 0;
 	int j = 0;
+	int k = 0;
 	int nodeAmount = 0;
 	int curPath = 0;
 
@@ -239,9 +244,9 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 	level++;
 
 	parNodes[level] = node->nodeVal;
-	visable[node->nodeVal] = node->nodeVal;
+	//visable[node->nodeVal] = node->nodeVal;
 
-	printf("nodeVal:%d Level:%d\n", node->nodeVal, level);
+//	printf("nodeVal:%d Level:%d\n", node->nodeVal, level);
 //	printf("Header Node\n");
 /*
 	for(i = 0; i < horzNums; i++)
@@ -270,11 +275,22 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 			{
 				insertAfter(node, i, nodeAmount);
 				nodeAmount++;
-
+			/*	
+				for(k = 0; k < horzNums; k++)
+				{
+					printf("%d ", visable[k]);
+				}
+				printf("\n");
+*/
 				if(i == visable[i])
 				{
+					printf("Searching:\n");
 					path = goUpPath(shortPath, path, node, i, curPath);
+//					printf("I'm visable\n");
+					printf("\n");
 				}
+
+				visable[i] = i;
 			}
 		}
 	}
@@ -291,17 +307,23 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath)
 {
 	Node *parent = malloc(sizeof(Node));
-	Node *temp = malloc(sizeof(Node));
+//	Node *temp = malloc(sizeof(Node));
 
 	int i = 0;
 
 // Adding curPath to program
 
 	parent = node->head;
+	
+	printf("Head: %d nodeVal: %d\n", parent->nodeVal, node->nodeVal);
 		
-	for(i = parent->amountNode - 2; i > -1; i--)
+	
+	for(i = 0; i < parent->amountNode; i++)
 	{
-		path = goDownPath(parent->node[i], path, shortPath, numSearch, curPath);
+		if(parent->node[i]->nodeVal != node->nodeVal)
+		{
+			path = goDownPath(parent->node[i], path, shortPath, numSearch, curPath);
+		}
 	}
 
 	if(parent->head != NULL)
@@ -314,16 +336,21 @@ int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath)
 
 int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath)
 {
+	int i = 0;
+
+	printf("child: %d \n", node->nodeVal);
+
 	if(node->nodeVal == numSearch)
 	{
 		if(path == -1)
 		{
-			path = curPath;
+			//path = curPath;
 		}
 
 		else if(curPath < path)
 		{
-			path = curPath;
+			//path = curPath;
+
 		}
 	}
 
@@ -331,7 +358,7 @@ int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath
 	{
 		for(i = 0; i < node->amountNode; i++)
 		{
-			path = goDownPath(node->node[i], path, shortPath, numSearch, int curPath);
+			path = goDownPath(node->node[i], path, shortPath, numSearch, curPath);
 		}
 	}
 
@@ -349,7 +376,7 @@ void insertAfter(Node* prev_node, int new_data, int nodeAmount)
 	             
 	/* 2. allocate new node */
 	//struct Node* new_node =(struct Node*) malloc(sizeof(struct Node)); 
-	 Node *new_node = malloc(sizeof(Node));
+	Node *new_node = malloc(sizeof(Node));
 									    
 	/* 3. put in the data  */
 	new_node->nodeVal  = new_data; 
@@ -361,5 +388,7 @@ void insertAfter(Node* prev_node, int new_data, int nodeAmount)
 	prev_node->node[nodeAmount] = new_node; 
 	prev_node->amountNode = nodeAmount + 1;
 	new_node->head = prev_node;
+
+	printf("nodeVal:%d\n", new_node->nodeVal);
 }
 	
