@@ -31,7 +31,7 @@ typedef struct ArrHold
 
 int searchNode(Node *, int, int **, int [], int, int [], int [], int);
 void insertAfter(Node *, int, int);
-int pathSearch(int [], int);
+int pathSearch(int [], int, Node *);
 
 
 
@@ -233,6 +233,7 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 	int i = 0;
 	int j = 0;
 	int nodeAmount = 0;
+	int curPath = 0;
 
 	char check = 'n';
 	level++;
@@ -272,7 +273,7 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 
 				if(i == visable[i])
 				{
-					path = pathSearch(shortPath, path);
+					path = goUpPath(shortPath, path, node, i, curPath);
 				}
 			}
 		}
@@ -287,8 +288,52 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 	return path;
 }
 
-int pathSearch(int shortPath[], int path)
+int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath)
 {
+	Node *parent = malloc(sizeof(Node));
+	Node *temp = malloc(sizeof(Node));
+
+	int i = 0;
+
+// Adding curPath to program
+
+	parent = node->head;
+		
+	for(i = parent->amountNode - 2; i > -1; i--)
+	{
+		path = goDownPath(parent->node[i], path, shortPath, numSearch, curPath);
+	}
+
+	if(parent->head != NULL)
+	{
+		path = goUpPath(shortPath, path, parent->node[i], numSearch, curPath);
+	}
+
+	return path;
+}
+
+int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath)
+{
+	if(node->nodeVal == numSearch)
+	{
+		if(path == -1)
+		{
+			path = curPath;
+		}
+
+		else if(curPath < path)
+		{
+			path = curPath;
+		}
+	}
+
+	else
+	{
+		for(i = 0; i < node->amountNode; i++)
+		{
+			path = goDownPath(node->node[i], path, shortPath, numSearch, int curPath);
+		}
+	}
 
 	return path;
 }
@@ -303,7 +348,8 @@ void insertAfter(Node* prev_node, int new_data, int nodeAmount)
 	}   
 	             
 	/* 2. allocate new node */
-	struct Node* new_node =(struct Node*) malloc(sizeof(struct Node)); 
+	//struct Node* new_node =(struct Node*) malloc(sizeof(struct Node)); 
+	 Node *new_node = malloc(sizeof(Node));
 									    
 	/* 3. put in the data  */
 	new_node->nodeVal  = new_data; 
