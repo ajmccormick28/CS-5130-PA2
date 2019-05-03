@@ -20,20 +20,14 @@ typedef struct Node
 	struct Node *head;
 	
 }Node;
-/*
-typedef struct ArrHold
-{
-	int ** matrix;
-	int * parNodes;
-
-}ArrHold;
-*/
 
 int searchNode(Node *, int, int **, int [], int, int [], int [], int, int []);
-void insertAfter(Node *, int, int);
 int goDownPath(Node *, int, int [], int, int, int [], int);
 int goUpPath(int [], int, Node *, int, int, int[], int);
 
+
+void insertAfter(Node *, int, int);
+void freeMem(Node *);
 
 
 
@@ -44,27 +38,14 @@ int main(int argc, char * argv[])
 	int vertNums = 1;
 	int i = 0;
 	int j = 0;
+        int level = -1;
+        int path = -1;
+
 
 	char lineNums[100];
 	char *temp;
 
 	FILE *readptr;
-/*
-	Node *nodes = malloc(sizeof(Node));
-
-	nodes->nodeVal = 8;
-
-	Node *newNod = malloc(sizeof(Node));
-	Node *secNode = malloc(sizeof(Node));
-
-	secNode->nodeVal = 22;
-
-	nodes->node[0] = newNod;
-	newNod->node[0] = secNode;
-
-	newNod->nodeVal = 9;
-*/
-	//printf("%d %d\n", nodes->node[0]->nodeVal, nodes->node[0]->node[0]->nodeVal);
 
 	if(argc < 2)
 	{
@@ -120,21 +101,6 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	//int * parNodes = (int*) malloc(sizeof(int) * horzNums);
-
-	//ArrHold *arrays = malloc(sizeof(struct ArrHold));
-	
-	//int tempMatrix[horzNums][vertNums];
-	//int tempParNodes[horzNums];
-
-
-	//arrays->matrix = tempMatrix;
-	//arrays->parNodes = tempParNodes;
-
-	//arrays->matrix = malloc(horzNums * sizeof(int) + vertNums * sizeof(int));
-	//arrays->parNodes = malloc(horzNums * sizeof(int));
-
-
 	fseek(readptr, 0, SEEK_SET);
 
 	for(i = 0; i < horzNums; i++)
@@ -161,9 +127,6 @@ int main(int argc, char * argv[])
 		
 		printf("\n");
 	}
-
-	printf("%d\n", (matrix[1][1] + matrix[0][1]));
-
 
 	for(i = 0; i < horzNums; i++)
 	{
@@ -223,12 +186,10 @@ int main(int argc, char * argv[])
 	}
 
 	visable[0] = 0;
-	int level = -1;
-	int path = -1;
 
 	path = searchNode(root, horzNums, matrix, parNodes, level, shortPath, visable, path, tempShortPath);
 
-	printf("final Path: %d\n", path);
+	printf("Shortest Path Length: %d\n", path);
 
 	printf("Shortest Path Route:\n");
 	for(i = 0; i < horzNums; i++)
@@ -246,7 +207,7 @@ int main(int argc, char * argv[])
 
 	printf("\n");
 	
-
+	freeMem(root);
 
 	return EXIT_SUCCESS;
 }
@@ -257,30 +218,22 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 	int j = 0;
 	int k = 0;
 	int nodeAmount = 0;
-	int curPath = 0;
+	int curPath = 0; // Holds the current path length when searching for a cycle
 
 	char check = 'n';
-	level++;
 
+	level++; // Adding one to the level
+
+	// Adding this node to the parent node array
 	parNodes[level] = node->nodeVal;
-	//visable[node->nodeVal] = node->nodeVal;
 
-//	printf("nodeVal:%d Level:%d\n", node->nodeVal, level);
-//	printf("Header Node\n");
-/*
-	for(i = 0; i < horzNums; i++)
-	{
-		printf("%d ", parNodes[i]);
-	}
-*/
-//	printf("\n");
-	//Creating Child Nodes
+	// Creating child nodes and checking for cycles 
 	for(i = 0; i < horzNums; i++)
 	{
 		check = 'n';
 		curPath = 1;
 
-
+		// Checking to see if the node trying to be created is already a parent node of the current node; will not create node if so
 		for(j = 0; j < horzNums; j++)
 		{
 			if(i == parNodes[j])
@@ -289,121 +242,118 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 			}
 		}
 		
+		// If not a parent node
 		if(check != 'y')
 		{
+			// Checking the matrix for a 1 siginaling an edge
 			if(matrix[node->nodeVal][i] == 1)
 			{
 				insertAfter(node, i, nodeAmount);
 				nodeAmount++;
-			/*	
-					for(k = 0; k < horzNums; k++)
-					{
-						printf("%d ", visable[k]);
-					}
-					printf("\n");
-	*/
-					if(i == visable[i])
-					{
-						printf("Searching:\n");
-						//curPath++;
-						tempShortPath[0] = i;
-						tempShortPath[1] = node->nodeVal;
-						path = goUpPath(shortPath, path, node, i, curPath, tempShortPath, horzNums);
-						tempShortPath[0] = -1;
-						tempShortPath[1] = -1;
-						tempShortPath[2] = -1;
-						printf("\n");
-					}
+	
+				if(i == visable[i])
+				{
+					tempShortPath[0] = i;
+					tempShortPath[1] = node->nodeVal;
 
-					visable[i] = i;
+					path = goUpPath(shortPath, path, node, i, curPath, tempShortPath, horzNums);
+
+					tempShortPath[0] = -1;
+					tempShortPath[1] = -1;
+					tempShortPath[2] = -1;
 				}
+
+				visable[i] = i;
 			}
 		}
-
-		for(i = 0; i < nodeAmount; i++)
-		{
-			path = searchNode(node->node[i], horzNums, matrix, parNodes, level, shortPath, visable, path, tempShortPath);
-			parNodes[level + 1] = -1;
-		}
-		
-		return path;
 	}
 
-	int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath, int tempShortPath[], int horzNums)
+	// Going to child nodes to create nodes attached to them
+	for(i = 0; i < nodeAmount; i++)
 	{
-		Node *parent = malloc(sizeof(Node));
-	//	Node *temp = malloc(sizeof(Node));
+		// Recursive Call to searchNode; path is set to int value
+		path = searchNode(node->node[i], horzNums, matrix, parNodes, level, shortPath, visable, path, tempShortPath);
+		
+		// Deletes previous node from the parent nodes array
+		parNodes[level + 1] = -1;
+	}
 
-		int i = 0;
+	return path; // Returning an int value
+}
 
-		curPath++;
+int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath, int tempShortPath[], int horzNums)
+{
+	int i = 0;
 
-		printf("curPath: %d\n", curPath);
+	// Creating a parent node and setting it to the head of node
+	Node *parent = node->head;
 
-	// Adding curPath to program
+	// Adding one to the current path
+	curPath++;
 
-		parent = node->head;
-
+	// Adding the current node to the current path
 	tempShortPath[curPath] = parent->nodeVal;
 	
-	printf("Head: %d nodeVal: %d parent amountNode: %d\n", parent->nodeVal, node->nodeVal, parent->amountNode);
-		
-	
+	// Checking the child nodes attached to the parent for the node value needed
 	for(i = 0; i < parent->amountNode; i++)
 	{
-		printf("Child we are going to: %d Node we came from: %d\n", parent->node[i]->nodeVal, node->nodeVal);
-
+		// Making sure we don't go back down the node we orignally came from on this path
 		if(parent->node[i]->nodeVal != node->nodeVal)
 		{
-			printf("parent going down\n");
+			// Call to function goDownPath; path is set to the int value returned
 			path = goDownPath(parent->node[i], path, shortPath, numSearch, curPath, tempShortPath, horzNums);
-			printf("Came back from child\n");
+
+			// Deleting the previous child node from the current path 
 			tempShortPath[curPath + 1] = -1;
 		}
 	}
 
-	//printf("parent head node: %d\n", parent->head->nodeVal);
-
+	// Checking to make sure we are not at the root node
 	if(parent->head != NULL)
 	{
-		printf("making it here\n");
+		// Recursive call to function goUpPath; path is set to the int value returned
 		path = goUpPath(shortPath, path, parent, numSearch, curPath, tempShortPath, horzNums);
+
+		// Deleting the previous parent node from the current path
 		tempShortPath[curPath + 1] = -1;
 	}
 
-	
-	return path;
+	return path; // Return an int value
 }
 
 int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath, int tempShortPath[], int horzNums)
 {
 	int i = 0;
 
+	// Adding to the length of the current path
 	curPath ++;
 
-	printf("child: %d \n", node->nodeVal);
-	printf("numSearch: %d \n", numSearch);
-
-	printf("curPath in child: %d path: %d\n", curPath, path);
-
+	// Adding the current node to the current path
 	tempShortPath[curPath] = node->nodeVal;
 
+	// Checking if this is the node that is being searched for
 	if(node->nodeVal == numSearch)
 	{
+		// If no path has been found yet
 		if(path == -1)
 		{
+			// Updating the length of the shortest path
 			path = curPath;
 			
+			// Updating the nodes of the shortest path
 			for(i = 0; i < horzNums; i++)
 			{
 				shortPath[i] = tempShortPath[i];
 			}
 		}
 
+		// Checking to see if it is shorter than the current shortest path
 		else if(curPath < path)
 		{
+			// Updating the length of the shortest path
 			path = curPath;
 
+			// Updating the nodes of the shortest path
 			for(i = 0; i < horzNums; i++)
 			{
 				shortPath[i] = tempShortPath[i];
@@ -411,45 +361,55 @@ int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath
 		}
 	}
 
+	// If this node is not the one looked for, check it's child nodes
 	else
 	{
 		for(i = 0; i < node->amountNode; i++)
 		{
-			printf("child going down\n");
+			// Recursive Call to function goDownPath; path is set to return int value
 			path = goDownPath(node->node[i], path, shortPath, numSearch, curPath, tempShortPath, horzNums);
+	
+			// Deleting child node just visited from temorpary shortest path holder
 			tempShortPath[curPath + 1] = -1;
 		}
 	}
 
-	printf("I made it to the end\n");
-	return path;
+	return path; // Returning int value
 }
 
 void insertAfter(Node* prev_node, int new_data, int nodeAmount) 
 { 
-	/*1. check if the given prev_node is NULL */ 
+	// 1. check if the given prev_node is NULL 
 	if (prev_node == NULL)  
 	{  
 		printf("the given previous node cannot be NULL");        
 		return;   
 	}   
 	             
-	/* 2. allocate new node */
-	//struct Node* new_node =(struct Node*) malloc(sizeof(struct Node)); 
+	// 2. allocate new node 
 	Node *new_node = malloc(sizeof(Node));
 									    
-	/* 3. put in the data  */
-	new_node->nodeVal  = new_data; 
-						       
-	/* 4. Make next of new node as next of prev_node */
-	//new_node->next = prev_node->next;  
-	    
-	/* 5. move the next of prev_node as new_node */
+	// 3. put in the data  
+	new_node->nodeVal  = new_data; 		       
+ 
+	// 4. move the next of prev_node as new_node 
 	prev_node->node[nodeAmount] = new_node; 
 	prev_node->amountNode = nodeAmount + 1;
 	new_node->head = prev_node;
 	new_node->amountNode = 0;
-
-	printf("nodeVal:%d\n", new_node->nodeVal);
 }
 	
+void freeMem(Node *node)
+{
+	int i = 0;
+	
+	// Searching for childern nodes attached
+	for(i = 0; i < node->amountNode; i++)
+	{
+		freeMem(node->node[i]);
+	}
+	
+	// Freeing current memory allocation
+	free(node);
+}
+
