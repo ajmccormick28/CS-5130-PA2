@@ -11,11 +11,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+// Struct Node used to hold nodes of the tree 
 typedef struct Node
 {
 	int nodeVal;
-	
 	int amountNode;
+	
 	struct Node *node[100];
 	struct Node *head;
 	
@@ -25,12 +26,16 @@ int searchNode(Node *, int, int **, int [], int, int [], int [], int, int []);
 int goDownPath(Node *, int, int [], int, int, int [], int);
 int goUpPath(int [], int, Node *, int, int, int[], int);
 
-
 void insertAfter(Node *, int, int);
 void freeMem(Node *);
 
-
-
+/*
+  *********************************************************************
+  *                                                                   *
+  * 			Main Function                                 *
+  * 			                                              *
+  ********************************************************************* 			                                               
+*/
 
 int main(int argc, char * argv[])
 {
@@ -39,14 +44,14 @@ int main(int argc, char * argv[])
 	int i = 0;
 	int j = 0;
         int level = -1;
-        int path = -1;
+        int path = -1; // Used to hold the shortest path 
 
-
-	char lineNums[100];
+	char lineNums[100]; 
 	char *temp;
 
 	FILE *readptr;
 
+	// Checking to make sure there is an input file
 	if(argc < 2)
 	{
 		printf("You didn't put any input in\n");
@@ -60,6 +65,7 @@ int main(int argc, char * argv[])
 		return EXIT_FAILURE;
 	}
 
+	// Pulling the first line of the input file
 	if(fgets(lineNums, 100, readptr) == NULL)
 	{
 		perror("main: Error: Line 1 in the input file is empty");
@@ -68,24 +74,27 @@ int main(int argc, char * argv[])
 
 	temp = strtok(lineNums, " \n\t");
 
+	// Getting the number of rows
 	while(temp != NULL)
 	{
 		horzNums++;
 		temp = strtok(NULL, " \n\t");
 	}
 
+	// Getting the number of columns
 	while(fgets(lineNums, 100, readptr) != NULL)
 	{
 		vertNums++;
 	}
 
-	printf("\nVert:%d Horz:%d", vertNums, horzNums);
+	// Checking if rows are equal to columns
 	if(vertNums != horzNums)
 	{
 		printf("The columns and rows of this matrix are not equal\n");
 		return EXIT_FAILURE;
 	}
 
+	// Creating a 2D array to hold the matrix
 	int ** matrix = (int**) malloc(sizeof(int*)*horzNums);
 
 	for(i = 0; i < vertNums; i++)
@@ -100,9 +109,11 @@ int main(int argc, char * argv[])
 			matrix[i][j]= i * j;
 		}
 	}
-
+	
+	// Resetting the pointer to the beginning of the input file
 	fseek(readptr, 0, SEEK_SET);
 
+	// Populating the matrix from the input file
 	for(i = 0; i < horzNums; i++)
 	{
 		fgets(lineNums, 100, readptr);
@@ -116,8 +127,9 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	printf("\n");
+	printf("Matrix:\n");
 
+	// Displaying the matrix
 	for(i = 0; i < horzNums; i++)
 	{
 		for(j = 0; j < vertNums; j++)
@@ -128,27 +140,33 @@ int main(int argc, char * argv[])
 		printf("\n");
 	}
 
+	// Error checks for the matrix
 	for(i = 0; i < horzNums; i++)
 	{
 		for(j = 0; j < vertNums; j++)
 		{
+			// If the column number is less than the row number
 			if(j < i)
 			{
+				// Checking if value is 0 or 1
 				if(matrix[i][j] != 0 && matrix[i][j] != 1)
 				{
 					printf("This matrix is invaild because it includes a non-bit value\n");
 					return EXIT_FAILURE;
 				}
 
+				// Checking to make sure graph is symmetric
 				else if(matrix[i][j] != matrix[j][i])
 				{
 					printf("This matrix is not symmetric\n");
 					return EXIT_FAILURE;
 				}
 			}
-
+			
+			// If column is equal to row
 			else if(j == i)
 			{
+				// Checking to make sure this value is zero
 				if(matrix[i][j] != 0)
 				{
 					printf("Undirected graphs cannot have a self-loop\n");
@@ -158,6 +176,7 @@ int main(int argc, char * argv[])
 
 			else
 			{
+				// Checking to make sure graph is symmetric
 				if(matrix[i][j] != 0 && matrix[i][j] != 1)
 				{
 					printf("This matrix is invaild because it includes a non-bit value\n");
@@ -167,16 +186,19 @@ int main(int argc, char * argv[])
 		}	
 	}
 
+	// Creating the root node for the tree
 	Node *root = malloc(sizeof(Node));
 	root->nodeVal = 0;
 	root->head = NULL;
 	root->amountNode = 0;
 
+	// Creating int arrays 
 	int tempShortPath[vertNums];
 	int shortPath[vertNums];
 	int parNodes[vertNums];
 	int visable[vertNums];
 
+	// Populating the int arrays with -1 in each indecie
 	for(i = 0; i < vertNums; i++)
 	{
 		tempShortPath[i] = -1;
@@ -185,13 +207,18 @@ int main(int argc, char * argv[])
 		visable[i] = -1;
 	}
 
+	// Adding the zero node to the visable nodes
 	visable[0] = 0;
 
+	// Call to function searchNode; Set path to an int value
 	path = searchNode(root, horzNums, matrix, parNodes, level, shortPath, visable, path, tempShortPath);
 
+	// Outputting shortest length value
 	printf("Shortest Path Length: %d\n", path);
-
+	
+	// Outputting the nodes in the shortest path
 	printf("Shortest Path Route:\n");
+
 	for(i = 0; i < horzNums; i++)
 	{
 		if(shortPath[i] != -1)
@@ -207,10 +234,28 @@ int main(int argc, char * argv[])
 
 	printf("\n");
 	
+	// Freeing the nodes in the tree
 	freeMem(root);
+
+	fclose(readptr);
+	free(matrix);
 
 	return EXIT_SUCCESS;
 }
+
+/*
+  *********************************************************************
+  *                                                                   *
+  *                   Function searchNode                             *
+  *     This function takes a node and looks for the connections it   *
+  *     has to other nodes and then creates those nodes.  It then     *
+  *     recursivly calls those nodes and does the same thing with     *
+  *     those nodes.  If it finds a node is created with on that      *
+  *     already has that value, it calls goUpNode to search for the   *
+  *     path length and nodes in that path. It returns an int value.  *
+  *                                                                   *
+  *********************************************************************
+*/
 
 int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level, int shortPath[], int visable[], int path, int tempShortPath[])
 {
@@ -245,24 +290,32 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 		// If not a parent node
 		if(check != 'y')
 		{
-			// Checking the matrix for a 1 siginaling an edge
+			// Checking the matrix for a '1' siginaling an edge
 			if(matrix[node->nodeVal][i] == 1)
 			{
+				// Call to function insertAfter
 				insertAfter(node, i, nodeAmount);
+
+				// Incrementing the node Amount, childern the current node has
 				nodeAmount++;
-	
+				
+				// Checking to see if this node value has already been created
 				if(i == visable[i])
 				{
+					// Setting the first two nodes of the current path 
 					tempShortPath[0] = i;
 					tempShortPath[1] = node->nodeVal;
 
+					// Call to function goUpPath; Set path to an int value
 					path = goUpPath(shortPath, path, node, i, curPath, tempShortPath, horzNums);
-
+					
+					// Resetting the first three nodes of the current path
 					tempShortPath[0] = -1;
 					tempShortPath[1] = -1;
 					tempShortPath[2] = -1;
 				}
 
+				// Adding the current node value to the visable array
 				visable[i] = i;
 			}
 		}
@@ -280,6 +333,20 @@ int searchNode(Node* node, int horzNums, int **matrix, int parNodes[], int level
 
 	return path; // Returning an int value
 }
+
+/*
+  *********************************************************************
+  *                                                                   *
+  *                   Function goUpPath                               *
+  *     This function takes a node and makes calls to the function    *
+  *     goDownPath for each of it's child nodes.  Once it has called  *
+  *     all it's childern, it then recursivly calls itself by going   *
+  *     to the parent node of the current node and restarting the     *
+  *     the process.  It returns an int value.                        *
+  *                                                                   *
+  *********************************************************************
+*/
+
 
 int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath, int tempShortPath[], int horzNums)
 {
@@ -320,6 +387,20 @@ int goUpPath(int shortPath[], int path, Node* node, int numSearch, int curPath, 
 
 	return path; // Return an int value
 }
+
+/*
+  *********************************************************************
+  *                                                                   *
+  *                   Function goDownPath                             *
+  *     This function takes a node and checks to see if it is the     *
+  *     node that is being looked for.  If it is, the function        *
+  *     checks to see if the current path is the smallest one and     *
+  *     updates the variables if needed.  It then makes recursive     *
+  *     calls to the function goDownPath for each of it's child       *
+  *     nodes.  It returns an int value.                              *
+  *                                                                   *
+  *********************************************************************
+*/
 
 int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath, int tempShortPath[], int horzNums)
 {
@@ -377,6 +458,16 @@ int goDownPath(Node *node, int path, int shortPath[], int numSearch, int curPath
 	return path; // Returning int value
 }
 
+/*
+  *********************************************************************
+  *                                                                   *
+  *                     Function insertAfter                          *
+  *     This function takes a node and information to make a child    *
+  *     node of the orginal node.                                     *
+  *                                                                   *
+  *********************************************************************
+*/
+
 void insertAfter(Node* prev_node, int new_data, int nodeAmount) 
 { 
 	// 1. check if the given prev_node is NULL 
@@ -398,7 +489,17 @@ void insertAfter(Node* prev_node, int new_data, int nodeAmount)
 	new_node->head = prev_node;
 	new_node->amountNode = 0;
 }
-	
+
+/*
+  *********************************************************************
+  *                                                                   *
+  *                       Function freeMem                            *
+  *     This function frees all the nodes within the tree.            *
+  *                                                                   *
+  *********************************************************************
+*/
+
+
 void freeMem(Node *node)
 {
 	int i = 0;
